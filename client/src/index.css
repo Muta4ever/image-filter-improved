@@ -68,15 +68,15 @@
   --sidebar: 0 0% 98%;
   --sidebar-foreground: 240 5% 26%;
   --sidebar-border: 240 6% 90%;
-  --sidebar-primary: 262 83% 58%;
+  --sidebar-primary: 190 90% 40%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 240 5% 96%;
   --sidebar-accent-foreground: 240 6% 10%;
-  --sidebar-ring: 262 83% 58%;
+  --sidebar-ring: 190 90% 40%;
   --popover: 0 0% 100%;
   --popover-foreground: 240 10% 4%;
   --popover-border: 240 6% 90%;
-  --primary: 262 83% 58%;
+  --primary: 190 90% 40%;
   --primary-foreground: 0 0% 100%;
   --secondary: 240 5% 96%;
   --secondary-foreground: 240 6% 10%;
@@ -87,8 +87,8 @@
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
   --input: 240 6% 90%;
-  --ring: 262 83% 58%;
-  --chart-1: 262 83% 58%;
+  --ring: 190 90% 40%;
+  --chart-1: 190 90% 40%;
   --chart-2: 173 58% 39%;
   --chart-3: 197 37% 24%;
   --chart-4: 43 74% 66%;
@@ -134,16 +134,16 @@
   --sidebar: 240 6% 6%;
   --sidebar-foreground: 240 5% 65%;
   --sidebar-border: 240 4% 16%;
-  --sidebar-primary: 262 83% 58%;
+  --sidebar-primary: 190 90% 50%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 240 4% 16%;
   --sidebar-accent-foreground: 0 0% 98%;
-  --sidebar-ring: 262 83% 58%;
+  --sidebar-ring: 190 90% 50%;
   --popover: 240 6% 8%;
   --popover-foreground: 0 0% 98%;
   --popover-border: 240 4% 16%;
-  --primary: 262 83% 58%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 190 90% 50%;
+  --primary-foreground: 0 0% 10%;
   --secondary: 240 4% 16%;
   --secondary-foreground: 0 0% 98%;
   --muted: 240 4% 16%;
@@ -153,8 +153,8 @@
   --destructive: 0 62% 30%;
   --destructive-foreground: 0 0% 98%;
   --input: 240 4% 20%;
-  --ring: 262 83% 58%;
-  --chart-1: 262 83% 58%;
+  --ring: 190 90% 50%;
+  --chart-1: 190 90% 50%;
   --chart-2: 160 60% 45%;
   --chart-3: 30 80% 55%;
   --chart-4: 280 65% 60%;
@@ -201,7 +201,7 @@
   }
 
   .gradient-text {
-    background: linear-gradient(135deg, hsl(262 83% 68%) 0%, hsl(280 80% 65%) 50%, hsl(320 75% 60%) 100%);
+    background: linear-gradient(135deg, hsl(190 90% 60%) 0%, hsl(205 80% 65%) 50%, hsl(220 75% 65%) 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -217,7 +217,7 @@
     inset: 0;
     padding: 1px;
     border-radius: inherit;
-    background: linear-gradient(135deg, hsl(262 83% 58% / 0.5), hsl(280 80% 55% / 0.3), hsl(320 75% 50% / 0.2));
+    background: linear-gradient(135deg, hsl(190 90% 50% / 0.5), hsl(205 80% 50% / 0.3), hsl(220 75% 50% / 0.2));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
@@ -240,11 +240,11 @@
   }
 
   .glow {
-    box-shadow: 0 0 40px hsl(262 83% 58% / 0.15), 0 0 80px hsl(262 83% 58% / 0.08);
+    box-shadow: 0 0 40px hsl(190 90% 50% / 0.15), 0 0 80px hsl(190 90% 50% / 0.08);
   }
 
   .glow-strong {
-    box-shadow: 0 0 60px hsl(262 83% 58% / 0.25), 0 0 120px hsl(262 83% 58% / 0.12);
+    box-shadow: 0 0 60px hsl(190 90% 50% / 0.25), 0 0 120px hsl(190 90% 50% / 0.12);
   }
 
   input[type="search"]::-webkit-search-cancel-button {

@@ -1,19 +1,20 @@
-# AI Image Filter App
+# Clinical AI Image Enhancer
 
-A React-based web application that analyzes images and provides intelligent filter recommendations. This frontend-only application allows users to upload images, view detailed image metrics, and apply professional-grade filters with precision control.
+A React-based web application tailored for medical imaging professionals. It analyzes clinical images like X-Rays, MRIs, and CT scans to provide intelligent, diagnostic-focused filter recommendations. This frontend-only application allows users to upload clinical scans, view simulated clinical metrics, and apply professional-grade filters with precision control to clarify anatomical structures.
 
 ## Features
 
-- **Image Upload**: Drag-and-drop interface for uploading JPG and PNG images.
-- **Image Metrics Analysis**: Calculates simulated metrics for blur, brightness, contrast, noise level, sharpness, and saturation.
-- **AI-Powered Recommendations**: Analyzes image characteristics to suggest the optimal filter for enhancing the image.
-- **Advanced Filter Controls**: 
-  - Apply Gaussian Blur, Median Blur, Low Pass, and High Pass filters.
-  - Adjust Kernel Size (1-31).
-  - Adjust Filter Intensity (0-100%).
-- **Side-by-Side Comparison**: Interactive split-screen slider to compare the original and filtered images in real-time.
-- **Export Options**: Download your processed image as a high-quality PNG or JPG file.
-- **Modern UI**: Polished dark-themed interface with glassmorphism effects, smooth animations (Framer Motion), and responsive design.
+- **Clinical Image Upload**: Drag-and-drop interface for uploading JPG and PNG medical scans.
+- **Diagnostic Metrics Analysis**: Calculates simulated metrics tailored to medical imaging: Softness, Exposure, Contrast, Artifact Level, Edge Definition, and Tissue Saturation.
+- **AI-Powered Recommendations**: Analyzes scan characteristics to suggest the optimal clinical filter for highlighting fractures, soft tissue, or blood vessels.
+- **Clinical Enhancement Controls**: 
+  - Apply Soft Tissue Smoothing, MRI/CT Artifact Removal, Bone Edge Enhancement, Radiograph Inversion (Negative), and Vascular Contrast Stretch.
+  - Adjust Enhancement Intensity (0-100%) dynamically.
+- **Side-by-Side Comparison**: Interactive split-screen slider to compare the original and enhanced scans in real-time.
+- **Export Options**: Download your enhanced diagnostic scan as a high-quality PNG or JPG file.
+- **Modern UI**: Polished dark-themed interface with clinical cyan/blue glassmorphism effects, smooth animations (Framer Motion), and responsive design.
+
+*Disclaimer: This tool is for demonstration and research purposes only. Not intended for direct diagnostic use without professional review.*
 
 ## Tech Stack
 
@@ -30,7 +31,7 @@ A React-based web application that analyzes images and provides intelligent filt
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd ai-image-filter
+cd clinical-image-enhancer
 ```
 
 2. Install dependencies:
@@ -53,11 +54,11 @@ This will generate static files in the `dist` (or `dist/public`) directory that 
 
 ## How It Works
 
-1. **Upload**: Users upload an image which is loaded via the browser's `FileReader` API.
-2. **Analysis**: The app generates metrics representing the image's characteristics.
-3. **Recommendation**: Based on the metrics, the app's logic determines the most suitable filter (e.g., Median blur for noisy images, High Pass for blurry images).
-4. **Processing**: Filters are applied dynamically using CSS `filter` properties for the preview.
-5. **Export**: When saving, the app uses an offscreen HTML5 `<canvas>` to accurately render the original image with the exact filter and intensity settings before triggering a download.
+1. **Upload**: Users upload a medical scan which is loaded via the browser's `FileReader` API.
+2. **Analysis**: The app generates clinical metrics representing the scan's diagnostic characteristics.
+3. **Recommendation**: Based on the metrics, the AI logic determines the most suitable enhancement (e.g., Artifact Removal for noisy CTs, Bone Edge Enhancement for blurry skeletal X-rays).
+4. **Processing**: Filters are applied dynamically using CSS `filter` and `invert` properties for the live preview.
+5. **Export**: When saving, the app uses an offscreen HTML5 `<canvas>` to accurately render the original scan with the exact filter and intensity settings before triggering a download.
 
 ## License
 
