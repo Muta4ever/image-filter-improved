@@ -31,6 +31,9 @@ interface ImageMetrics {
   blur: number;
   brightness: number;
   contrast: number;
+  noiseLevel: number;
+  sharpness: number;
+  saturation: number;
 }
 
 const filterDescriptions: Record<FilterType, string> = {
@@ -41,41 +44,44 @@ const filterDescriptions: Record<FilterType, string> = {
 };
 
 const mockAISuggestions: Record<string, { filter: FilterType; reason: string }> = {
-  low_blur: {
-    filter: "highpass",
-    reason: "Your image has low blur (sharp details). I recommend the **High Pass** filter to further enhance edges and bring out fine details, making the image pop."
-  },
-  high_blur: {
+  high_noise: {
     filter: "median",
-    reason: "Your image appears slightly blurry. I recommend the **Median Blur** filter to smooth out any noise artifacts while preserving what edge definition remains."
+    reason: "Your image has a high noise level. I recommend the **Median Blur** filter to effectively remove \"salt and pepper\" noise while preserving the sharp edges of your subject."
   },
-  dark: {
+  low_sharpness: {
     filter: "highpass",
-    reason: "Your image is quite dark. I recommend the **High Pass** filter which will increase contrast and brightness, helping to reveal hidden details in the shadows."
+    reason: "Your image lacks sharpness. I recommend the **High Pass** filter to enhance edges and bring out fine details, making the image look crisp and focused."
   },
-  bright: {
+  low_contrast_dark: {
     filter: "gaussian",
-    reason: "Your image is well-lit. I recommend the **Gaussian Blur** filter for a soft, professional look that works great for portraits and product photography."
+    reason: "Your image is dark and has low contrast. I recommend a slight **Gaussian Blur** to reduce any noise from low-light conditions, followed by post-processing to brighten."
   },
-  default: {
+  high_sharpness_noisy: {
+    filter: "lowpass",
+    reason: "Your image is very sharp but appears slightly noisy. I recommend the **Low Pass** filter to soften the overall appearance and remove high-frequency artifacts."
+  },
+  balanced: {
     filter: "gaussian",
-    reason: "Based on your image metrics, I recommend the **Gaussian Blur** filter. It provides a balanced smoothing effect that works well for most image types."
+    reason: "Your image has well-balanced metrics. I recommend the **Gaussian Blur** filter for a soft, professional look that works perfectly for portraits and product photography."
   }
 };
 
 function getAISuggestion(metrics: ImageMetrics) {
-  if (metrics.blur < 100) return mockAISuggestions.low_blur;
-  if (metrics.blur > 500) return mockAISuggestions.high_blur;
-  if (metrics.brightness < 80) return mockAISuggestions.dark;
-  if (metrics.brightness > 180) return mockAISuggestions.bright;
-  return mockAISuggestions.default;
+  if (metrics.noiseLevel > 70) return mockAISuggestions.high_noise;
+  if (metrics.sharpness < 40) return mockAISuggestions.low_sharpness;
+  if (metrics.brightness < 80 && metrics.contrast < 50) return mockAISuggestions.low_contrast_dark;
+  if (metrics.sharpness > 80 && metrics.noiseLevel > 40) return mockAISuggestions.high_sharpness_noisy;
+  return mockAISuggestions.balanced;
 }
 
 function generateRandomMetrics(): ImageMetrics {
   return {
     blur: Math.random() * 800 + 50,
     brightness: Math.random() * 200 + 30,
-    contrast: Math.random() * 80 + 20
+    contrast: Math.random() * 80 + 20,
+    noiseLevel: Math.random() * 100,
+    sharpness: Math.random() * 100,
+    saturation: Math.random() * 100
   };
 }
 
@@ -247,21 +253,33 @@ export default function Home() {
 
                   {metrics && (
                     <motion.div 
-                      className="grid grid-cols-3 gap-4"
+                      className="grid grid-cols-3 gap-3"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                     >
-                      <div className="text-center p-4 rounded-xl bg-muted/50">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Blur</p>
-                        <p className="font-mono text-lg font-semibold" data-testid="text-blur-score">{metrics.blur.toFixed(2)}</p>
+                      <div className="text-center p-3 rounded-xl bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Blur</p>
+                        <p className="font-mono text-sm font-semibold" data-testid="text-blur-score">{metrics.blur.toFixed(1)}</p>
                       </div>
-                      <div className="text-center p-4 rounded-xl bg-muted/50">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Brightness</p>
-                        <p className="font-mono text-lg font-semibold" data-testid="text-brightness-score">{metrics.brightness.toFixed(2)}</p>
+                      <div className="text-center p-3 rounded-xl bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Brightness</p>
+                        <p className="font-mono text-sm font-semibold" data-testid="text-brightness-score">{metrics.brightness.toFixed(1)}</p>
                       </div>
-                      <div className="text-center p-4 rounded-xl bg-muted/50">
-                        <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Contrast</p>
-                        <p className="font-mono text-lg font-semibold" data-testid="text-contrast-score">{metrics.contrast.toFixed(2)}</p>
+                      <div className="text-center p-3 rounded-xl bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Contrast</p>
+                        <p className="font-mono text-sm font-semibold" data-testid="text-contrast-score">{metrics.contrast.toFixed(1)}</p>
+                      </div>
+                      <div className="text-center p-3 rounded-xl bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Noise</p>
+                        <p className="font-mono text-sm font-semibold" data-testid="text-noise-score">{metrics.noiseLevel.toFixed(1)}%</p>
+                      </div>
+                      <div className="text-center p-3 rounded-xl bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Sharpness</p>
+                        <p className="font-mono text-sm font-semibold" data-testid="text-sharpness-score">{metrics.sharpness.toFixed(1)}%</p>
+                      </div>
+                      <div className="text-center p-3 rounded-xl bg-muted/50">
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1">Saturation</p>
+                        <p className="font-mono text-sm font-semibold" data-testid="text-saturation-score">{metrics.saturation.toFixed(1)}%</p>
                       </div>
                     </motion.div>
                   )}
