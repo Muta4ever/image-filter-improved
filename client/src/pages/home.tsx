@@ -10,7 +10,9 @@ import {
   RotateCcw,
   Loader2,
   Check,
-  Info
+  Info,
+  ArrowLeftRight,
+  Settings2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -85,14 +87,34 @@ function generateRandomMetrics(): ImageMetrics {
   };
 }
 
+const getDynamicFilterStyle = (filter: FilterType, kernel: number) => {
+  switch (filter) {
+    case "gaussian":
+      return `blur(${kernel / 2}px)`;
+    case "median":
+      return `blur(${kernel / 4}px) contrast(1.1)`;
+    case "lowpass":
+      return `blur(${kernel / 1.5}px)`;
+    case "highpass":
+      return `contrast(${1 + kernel / 15}) brightness(1.1) saturate(0.5)`;
+    default:
+      return "none";
+  }
+};
+
 export default function Home() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [metrics, setMetrics] = useState<ImageMetrics | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<FilterType>("gaussian");
   const [kernelSize, setKernelSize] = useState(5);
+  const [intensity, setIntensity] = useState(100);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<{ filter: FilterType; reason: string } | null>(null);
   const [showFiltered, setShowFiltered] = useState(false);
+  const [isComparing, setIsComparing] = useState(false);
+  const [comparePosition, setComparePosition] = useState(50);
+  const [downloadFormat, setDownloadFormat] = useState<"png" | "jpg">("png");
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -104,6 +126,7 @@ export default function Home() {
         setMetrics(generateRandomMetrics());
         setAiSuggestion(null);
         setShowFiltered(false);
+        setIsComparing(false);
       };
       reader.readAsDataURL(file);
     }
@@ -119,6 +142,7 @@ export default function Home() {
         setMetrics(generateRandomMetrics());
         setAiSuggestion(null);
         setShowFiltered(false);
+        setIsComparing(false);
       };
       reader.readAsDataURL(file);
     }
@@ -137,6 +161,7 @@ export default function Home() {
 
   const handleApplyFilter = useCallback(() => {
     setShowFiltered(true);
+    setIsComparing(false);
   }, []);
 
   const handleReset = useCallback(() => {
@@ -144,24 +169,44 @@ export default function Home() {
     setMetrics(null);
     setAiSuggestion(null);
     setShowFiltered(false);
+    setIsComparing(false);
+    setIntensity(100);
+    setKernelSize(5);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   }, []);
 
-  const getFilterClass = (filter: FilterType) => {
-    switch (filter) {
-      case "gaussian":
-      case "lowpass":
-        return "filter-blur";
-      case "median":
-        return "filter-blur opacity-95";
-      case "highpass":
-        return "filter-sharpen";
-      default:
-        return "";
-    }
-  };
+  const handleDownload = useCallback(() => {
+    if (!uploadedImage) return;
+    
+    // Create an offscreen canvas to process the image
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      if (ctx) {
+        // Draw the original image first
+        ctx.drawImage(img, 0, 0);
+        
+        // Apply the filter on top with the selected intensity (opacity)
+        ctx.globalAlpha = intensity / 100;
+        ctx.filter = getDynamicFilterStyle(selectedFilter, kernelSize);
+        ctx.drawImage(img, 0, 0);
+        
+        // Trigger download
+        const link = document.createElement("a");
+        link.download = `filtered-image.${downloadFormat}`;
+        link.href = canvas.toDataURL(`image/${downloadFormat === 'jpg' ? 'jpeg' : 'png'}`, 0.9);
+        link.click();
+      }
+    };
+    img.src = uploadedImage;
+  }, [uploadedImage, selectedFilter, kernelSize, intensity, downloadFormat]);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -234,20 +279,76 @@ export default function Home() {
                 </label>
               ) : (
                 <div className="space-y-6">
-                  <div className="relative rounded-2xl overflow-hidden bg-black/20">
+                  <div className="relative rounded-2xl overflow-hidden bg-black/20 flex items-center justify-center min-h-[300px]" data-testid="container-image-preview">
+                    {/* Base Image */}
                     <img
                       src={uploadedImage}
-                      alt="Uploaded"
-                      className={`w-full h-auto max-h-[400px] object-contain transition-all duration-500 ${showFiltered ? getFilterClass(selectedFilter) : ""}`}
-                      data-testid="img-uploaded"
+                      alt="Original"
+                      className="w-full h-auto max-h-[450px] object-contain"
+                      data-testid="img-original"
                     />
+
+                    {/* Filtered Overlay */}
                     {showFiltered && (
-                      <div className="absolute top-4 right-4">
-                        <Badge className="bg-primary/90 text-primary-foreground">
+                      <div 
+                        className="absolute inset-0 bg-transparent flex items-center justify-center"
+                        style={{ 
+                          clipPath: isComparing ? `inset(0 0 0 ${comparePosition}%)` : 'none',
+                          opacity: intensity / 100
+                        }}
+                      >
+                        <img
+                          src={uploadedImage}
+                          alt="Filtered"
+                          className="w-full h-auto max-h-[450px] object-contain"
+                          style={{ filter: getDynamicFilterStyle(selectedFilter, kernelSize) }}
+                          data-testid="img-filtered"
+                        />
+                      </div>
+                    )}
+
+                    {/* Comparison Slider Overlay */}
+                    {showFiltered && isComparing && (
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div 
+                          className="absolute top-0 bottom-0 w-0.5 bg-white shadow-[0_0_10px_rgba(0,0,0,0.5)] z-10"
+                          style={{ left: `${comparePosition}%` }}
+                        >
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white text-black rounded-full shadow-lg flex items-center justify-center pointer-events-auto cursor-ew-resize">
+                            <ArrowLeftRight className="w-4 h-4" />
+                          </div>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          value={comparePosition}
+                          onChange={(e) => setComparePosition(Number(e.target.value))}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-ew-resize pointer-events-auto z-20"
+                          data-testid="slider-compare"
+                        />
+                      </div>
+                    )}
+
+                    {/* Badges */}
+                    {showFiltered && !isComparing && (
+                      <div className="absolute top-4 right-4 z-10">
+                        <Badge className="bg-primary/90 text-primary-foreground backdrop-blur-md shadow-lg">
                           <Check className="w-3 h-3 mr-1" />
-                          {selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1)} Applied
+                          {selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1)} ({intensity}%)
                         </Badge>
                       </div>
+                    )}
+                    
+                    {showFiltered && isComparing && (
+                      <>
+                        <div className="absolute top-4 left-4 z-10">
+                          <Badge className="bg-black/60 text-white backdrop-blur-md border border-white/20">Original</Badge>
+                        </div>
+                        <div className="absolute top-4 right-4 z-10">
+                          <Badge className="bg-primary/90 text-primary-foreground backdrop-blur-md shadow-lg">Filtered</Badge>
+                        </div>
+                      </>
                     )}
                   </div>
 
@@ -377,6 +478,7 @@ export default function Home() {
                     onValueChange={(v) => {
                       setSelectedFilter(v as FilterType);
                       setShowFiltered(false);
+                      setIsComparing(false);
                     }}
                   >
                     <SelectTrigger className="h-12 rounded-xl" data-testid="select-filter-type">
@@ -404,6 +506,7 @@ export default function Home() {
                       const newVal = v[0] % 2 === 0 ? v[0] + 1 : v[0];
                       setKernelSize(newVal);
                       setShowFiltered(false);
+                      setIsComparing(false);
                     }}
                     min={1}
                     max={31}
@@ -414,29 +517,83 @@ export default function Home() {
                   <p className="text-xs text-muted-foreground">Odd numbers only (1-31)</p>
                 </div>
 
-                <div className="pt-4 space-y-3">
-                  <Button 
-                    onClick={handleApplyFilter}
-                    disabled={!uploadedImage}
-                    className="w-full h-12 rounded-xl font-medium text-base"
-                    data-testid="button-apply-filter"
-                  >
-                    <Wand2 className="w-4 h-4 mr-2" />
-                    Apply Filter
-                  </Button>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Filter Intensity</label>
+                    <span className="font-mono text-sm text-muted-foreground bg-muted px-2 py-1 rounded" data-testid="text-intensity">
+                      {intensity}%
+                    </span>
+                  </div>
+                  <Slider
+                    value={[intensity]}
+                    onValueChange={(v) => {
+                      setIntensity(v[0]);
+                    }}
+                    min={0}
+                    max={100}
+                    step={1}
+                    className="py-2"
+                    data-testid="slider-intensity"
+                  />
+                </div>
 
-                  {showFiltered && (
+                <div className="pt-4 space-y-3">
+                  {!showFiltered ? (
+                    <Button 
+                      onClick={handleApplyFilter}
+                      disabled={!uploadedImage}
+                      className="w-full h-12 rounded-xl font-medium text-base"
+                      data-testid="button-apply-filter"
+                    >
+                      <Wand2 className="w-4 h-4 mr-2" />
+                      Apply Filter
+                    </Button>
+                  ) : (
                     <motion.div
                       initial={{ opacity: 0, y: 5 }}
                       animate={{ opacity: 1, y: 0 }}
+                      className="space-y-3"
                     >
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button 
+                          variant={isComparing ? "secondary" : "outline"}
+                          onClick={() => setIsComparing(!isComparing)}
+                          className="h-12 rounded-xl font-medium border-primary/20 hover:bg-primary/5"
+                          data-testid="button-compare"
+                        >
+                          <ArrowLeftRight className="w-4 h-4 mr-2" />
+                          {isComparing ? "Exit Compare" : "Compare View"}
+                        </Button>
+
+                        <div className="flex bg-primary text-primary-foreground rounded-xl overflow-hidden hover:bg-primary/90 transition-colors cursor-pointer group">
+                          <Button 
+                            onClick={handleDownload}
+                            className="flex-1 h-12 rounded-none font-medium border-r border-primary-foreground/20 group-hover:bg-transparent"
+                            data-testid="button-download"
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Save
+                          </Button>
+                          <Select value={downloadFormat} onValueChange={(v: "png" | "jpg") => setDownloadFormat(v)}>
+                            <SelectTrigger className="w-[70px] h-12 rounded-none border-0 bg-transparent text-primary-foreground focus:ring-0 focus:ring-offset-0 px-2 py-0 mx-0 outline-none ring-0 focus-visible:ring-0">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="png">PNG</SelectItem>
+                              <SelectItem value="jpg">JPG</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                       <Button 
-                        variant="outline"
-                        className="w-full h-12 rounded-xl font-medium"
-                        data-testid="button-download"
+                        variant="ghost"
+                        onClick={() => {
+                          setShowFiltered(false);
+                          setIsComparing(false);
+                        }}
+                        className="w-full h-10 text-muted-foreground hover:text-foreground"
                       >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download Filtered Image
+                        Adjust Filter Settings
                       </Button>
                     </motion.div>
                   )}
@@ -453,6 +610,7 @@ export default function Home() {
                     onClick={() => {
                       setSelectedFilter(filter);
                       setShowFiltered(false);
+                      setIsComparing(false);
                     }}
                     className={`p-3 rounded-xl text-left transition-all ${
                       selectedFilter === filter 
